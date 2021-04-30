@@ -770,32 +770,34 @@ public class ConversationFragment extends LoggingFragment {
     builder.setCancelable(true);
 
     builder.setPositiveButton(R.string.ConversationFragment_delete_for_me, (dialog, which) -> {
-      new ProgressDialogAsyncTask<Void, Void, Void>(getActivity(),
-                                                    R.string.ConversationFragment_deleting,
-                                                    R.string.ConversationFragment_deleting_messages)
-      {
-        @Override
-        protected Void doInBackground(Void... voids) {
-          for (MessageRecord messageRecord : messageRecords) {
-            boolean threadDeleted;
-
-            if (messageRecord.isMms()) {
-              threadDeleted = DatabaseFactory.getMmsDatabase(context).deleteMessage(messageRecord.getId());
-            } else {
-              threadDeleted = DatabaseFactory.getSmsDatabase(context).deleteMessage(messageRecord.getId());
-            }
-
-            if (threadDeleted) {
-              threadId = -1;
-              conversationViewModel.clearThreadId();
-              messageCountsViewModel.clearThreadId();
-              listener.setThreadId(threadId);
-            }
-          }
-
-          return null;
-        }
-      }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+      new AlertDialog.Builder(requireActivity()).setTitle(R.string.ConversationListFragment_are_you_sure)
+          .setMessage(R.string.ConversationFragment_this_message_will_be_deleted_for_you_in_the_conversation)
+          .setPositiveButton(R.string.ConversationFragment_delete_for_me, (confirmation, pickOne) -> {
+            new ProgressDialogAsyncTask<Void, Void, Void>(getActivity(),
+                      R.string.ConversationFragment_deleting,
+                      R.string.ConversationFragment_deleting_messages) {
+                   @Override
+                   protected Void doInBackground(Void... voids) {
+                     for (MessageRecord messageRecord : messageRecords) {
+                         boolean threadDeleted;
+                         if (messageRecord.isMms()) {
+                            threadDeleted = DatabaseFactory.getMmsDatabase(context).deleteMessage(messageRecord.getId());
+                         } else {
+                            threadDeleted = DatabaseFactory.getSmsDatabase(context).deleteMessage(messageRecord.getId());
+                         }
+                         if (threadDeleted) {
+                            threadId = -1;
+                            conversationViewModel.clearThreadId();
+                            messageCountsViewModel.clearThreadId();
+                            listener.setThreadId(threadId);
+                         }
+                      }
+                      return null;
+                   }
+                }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+            })
+            .setNegativeButton(android.R.string.cancel, null)
+            .show();
     });
 
     if (RemoteDeleteUtil.isValidSend(messageRecords, System.currentTimeMillis())) {
@@ -816,7 +818,7 @@ public class ConversationFragment extends LoggingFragment {
     };
 
     if (SignalStore.uiHints().hasConfirmedDeleteForEveryoneOnce()) {
-      deleteForEveryone.run();
+      buildDeleteForEveryoneConfirmationDialog(messageRecords).show();
     } else {
       new AlertDialog.Builder(requireActivity())
                      .setMessage(R.string.ConversationFragment_this_message_will_be_deleted_for_everyone_in_the_conversation)
@@ -827,6 +829,26 @@ public class ConversationFragment extends LoggingFragment {
                      .setNegativeButton(android.R.string.cancel, null)
                      .show();
     }
+  }
+
+  private AlertDialog.Builder buildDeleteForEveryoneConfirmationDialog(Set<MessageRecord> messageRecords){
+    AlertDialog.Builder confirmation       = new AlertDialog.Builder(getActivity());
+    Runnable deleteForEveryone = () -> {
+      SignalExecutors.BOUNDED.execute(() -> {
+        for (MessageRecord message : messageRecords) {
+          MessageSender.sendRemoteDelete(ApplicationDependencies.getApplication(), message.getId(), message.isMms());
+        }
+      });
+    };
+    confirmation.setTitle(R.string.ConversationListFragment_are_you_sure);
+    confirmation.setMessage(R.string.ConversationFragment_this_message_will_be_deleted_for_everyone_in_the_conversation);
+    confirmation.setCancelable(true);
+    confirmation.setPositiveButton(R.string.ConversationFragment_delete_for_everyone, (dialog, which) -> {
+      SignalStore.uiHints().markHasConfirmedDeleteForEveryoneOnce();
+      deleteForEveryone.run();
+    });
+    confirmation.setNegativeButton(android.R.string.cancel, null);
+    return confirmation;
   }
 
   private void handleDisplayDetails(ConversationMessage message) {
