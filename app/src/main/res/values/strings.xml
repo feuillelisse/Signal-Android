@@ -210,6 +210,7 @@
     <string name="ConversationItem_download_more">&#160; Download More</string>
     <string name="ConversationItem_pending">&#160; Pending</string>
     <string name="ConversationItem_this_message_was_deleted">This message was deleted.</string>
+    <string name="ConversationItem_this_message_was_deleted_by_s">This message was deleted by %1$s.</string>
     <string name="ConversationItem_you_deleted_this_message">You deleted this message.</string>
 
     <!-- ConversationActivity -->
@@ -316,6 +317,7 @@
     <string name="ConversationFragment_delete_for_me">Delete for me</string>
     <string name="ConversationFragment_delete_for_everyone">Delete for everyone</string>
     <string name="ConversationFragment_this_message_will_be_deleted_for_everyone_in_the_conversation">This message will be deleted for everyone in the conversation if they’re on a recent version of Signal. They will be able to see that you deleted a message.</string>
+    <string name="ConversationFragment_this_message_will_be_deleted_for_you_in_the_conversation">You won’t be able to see this message anymore. But, the message recipients still can see it.</string>
     <string name="ConversationFragment_quoted_message_not_found">Original message not found</string>
     <string name="ConversationFragment_quoted_message_no_longer_available">Original message no longer available</string>
     <string name="ConversationFragment_failed_to_open_message">Failed to open message</string>
@@ -344,6 +346,7 @@
     </plurals>
     <string name="ConversationListFragment_deleting">Deleting</string>
     <string name="ConversationListFragment_deleting_selected_conversations">Deleting selected conversations…</string>
+    <string name="ConversationListFragment_are_you_sure">Are you sure?</string>
     <plurals name="ConversationListFragment_conversations_archived">
         <item quantity="one">Conversation archived</item>
         <item quantity="other">%d conversations archived</item>
